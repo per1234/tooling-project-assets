@@ -91,25 +91,15 @@ tasks:
           --output-document="{{.WORKFLOW_SCHEMA_PATH}}" \
           {{.WORKFLOW_SCHEMA_URL}}
       - |
-        npx \
-          --package=ajv-cli \
-          --package=ajv-formats \
-          ajv validate \
-            --all-errors \
-            --strict=false \
-            -c ajv-formats \
-            -s "{{.WORKFLOW_SCHEMA_PATH}}" \
-            -d "{{.WORKFLOWS_DATA_PATH}}"
+        task utility:schema-validate \
+          DATA_PATH="{{.WORKFLOWS_DATA_PATH}}" \
+          SCHEMA_PATH="{{.WORKFLOW_SCHEMA_PATH}}" \
+          STRICT="false"
       - |
-        npx \
-          --package=ajv-cli \
-          --package=ajv-formats \
-          ajv validate \
-            --all-errors \
-            --strict=false \
-            -c ajv-formats \
-            -s "{{.WORKFLOW_SCHEMA_PATH}}" \
-            -d "{{.TEMPLATE_WORKFLOWS_DATA_PATH}}"
+        task utility:schema-validate \
+          DATA_PATH="{{.TEMPLATE_WORKFLOWS_DATA_PATH}}" \
+          SCHEMA_PATH="{{.WORKFLOW_SCHEMA_PATH}}" \
+          STRICT="false"
 
   clang-format:check-config:
     desc: Check that ClangFormat configuration file matches effective tool configuration
@@ -329,14 +319,9 @@ tasks:
       - wget --quiet --output-document="{{.SCHEMA_PATH}}" {{.SCHEMA_URL}}
       - cp "{{.DATA_SOURCE_PATH}}" "{{.DATA_PATH}}"
       - |
-        npx \
-          --package=ajv-cli \
-          --package=ajv-formats \
-          ajv validate \
-            --all-errors \
-            -c ajv-formats \
-            -s "{{.SCHEMA_PATH}}" \
-            -d "{{.DATA_PATH}}"
+        task utility:schema-validate \
+          DATA_PATH="{{.DATA_PATH}}" \
+          SCHEMA_PATH="{{.SCHEMA_PATH}}"
 
   config:sync:
     desc: Sync configuration files from templates
@@ -568,14 +553,9 @@ tasks:
     cmds:
       - wget --quiet --output-document="{{.SCHEMA_PATH}}" {{.SCHEMA_URL}}
       - |
-        npx \
-          --package=ajv-cli \
-          --package=ajv-formats \
-          ajv validate \
-            --all-errors \
-            -c ajv-formats \
-            -s "{{.SCHEMA_PATH}}" \
-            -d "{{.DATA_PATH}}"
+        task utility:schema-validate \
+          DATA_PATH="{{.DATA_PATH}}" \
+          SCHEMA_PATH="{{.SCHEMA_PATH}}"
 
   js:fix:
     desc: Fix JavaScript code linting violations
@@ -600,15 +580,10 @@ tasks:
       - task: npm:install-deps
     cmds:
       - |
-        npx \
-          --package=ajv-cli \
-          --package=ajv-formats \
-          ajv validate \
-            --all-errors \
-            --strict=false \
-            -c ajv-formats \
-            -s "{{.SCHEMA_PATH}}" \
-            -d "{{.DATA_PATH}}"
+        task utility:schema-validate \
+          DATA_PATH="{{.DATA_PATH}}" \
+          SCHEMA_PATH="{{.SCHEMA_PATH}}" \
+          STRICT="false"
 
   # Source: https://github.com/arduino/tooling-project-assets/blob/main/workflow-templates/assets/check-markdown-task/Taskfile.yml
   markdown:check-links:
@@ -702,16 +677,10 @@ tasks:
     cmds:
       - wget --quiet --output-document="{{.SCHEMA_PATH}}" {{.SCHEMA_URL}}
       - |
-        npx \
-          --package=ajv-cli \
-          --package=ajv-formats \
-          ajv validate \
-            --all-errors \
-            --strict=false \
-            --allow-union-types \
-            -c ajv-formats \
-            -s "{{.SCHEMA_PATH}}" \
-            -d "{{.DATA_PATH}}"
+        task utility:schema-validate \
+          DATA_PATH="{{.DATA_PATH}}" \
+          SCHEMA_PATH="{{.SCHEMA_PATH}}" \
+          STRICT="false"
 
   # Source: https://github.com/arduino/tooling-project-assets/blob/main/workflow-templates/assets/npm-task/Taskfile.yml
   npm:install-deps:
@@ -928,6 +897,37 @@ tasks:
         else
           echo "{{.RAW_PATH}}"
         fi
+
+  # Validate data files against their JSON schema.
+  # Parameter variables:
+  # - DATA_PATH: path of the data file. Globs are supported.
+  # - SCHEMA_PATH: path of the JSON schema file.
+  # - STRICT: (optional) set to `false` if passing validation in strict mode is not feasible.
+  # Source: https://github.com/arduino/tooling-project-assets/blob/main/workflow-templates/assets/schema-task/Taskfile.yml
+  utility:schema-validate:
+    vars:
+      STRICT: '{{default "true" .STRICT}}'
+      # The ajv-cli command is defined in a variable to allow it to be broken into multiple lines for readability.
+      # This can't be done in the `cmd` object because `npx --call` uses the native shell, which causes the standard
+      # newline escaping approach to not work on Windows.
+      AJV_COMMAND: " \
+          ajv validate \
+            --all-errors \
+            --allow-union-types \
+            --strict={{.STRICT}} \
+            -c ajv-formats \
+            -d \"{{.DATA_PATH}}\" \
+            -s \"{{.SCHEMA_PATH}}\" \
+        "
+    deps:
+      - task: npm:install-deps
+    cmds:
+      - |
+        npx \
+          --package=ajv-cli \
+          --package=ajv-formats \
+          --call \
+            '{{.AJV_COMMAND}}'
 
   # Source: https://github.com/arduino/tooling-project-assets/blob/main/workflow-templates/assets/check-yaml-task/Taskfile.yml
   yaml:lint:

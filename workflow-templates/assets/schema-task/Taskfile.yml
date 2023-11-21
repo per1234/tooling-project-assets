@@ -1,0 +1,34 @@
+# See: https://taskfile.dev/#/usage
+version: "3"
+
+tasks:
+  # Validate data files against their JSON schema.
+  # Parameter variables:
+  # - DATA_PATH: path of the data file. Globs are supported.
+  # - SCHEMA_PATH: path of the JSON schema file.
+  # - STRICT: (optional) set to `false` if passing validation in strict mode is not feasible.
+  # Source: https://github.com/arduino/tooling-project-assets/blob/main/workflow-templates/assets/schema-task/Taskfile.yml
+  utility:schema-validate:
+    vars:
+      STRICT: '{{default "true" .STRICT}}'
+      # The ajv-cli command is defined in a variable to allow it to be broken into multiple lines for readability.
+      # This can't be done in the `cmd` object because `npx --call` uses the native shell, which causes the standard
+      # newline escaping approach to not work on Windows.
+      AJV_COMMAND: " \
+          ajv validate \
+            --all-errors \
+            --allow-union-types \
+            --strict={{.STRICT}} \
+            -c ajv-formats \
+            -d \"{{.DATA_PATH}}\" \
+            -s \"{{.SCHEMA_PATH}}\" \
+        "
+    deps:
+      - task: npm:install-deps
+    cmds:
+      - |
+        npx \
+          --package=ajv-cli \
+          --package=ajv-formats \
+          --call \
+            '{{.AJV_COMMAND}}'
