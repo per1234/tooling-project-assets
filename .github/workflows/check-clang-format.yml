@@ -57,7 +57,7 @@ jobs:
           version: 3.x
 
       - name: Validate ClangFormat configuration files
-        run: task --silent clang-format:validate
+        run: task clang-format:validate
 
   check-config:
     runs-on: ubuntu-latest
