@@ -11,7 +11,7 @@ vars:
   DEFAULT_CLANG_FORMAT_VERSION: 14.0.0
   # Source: https://github.com/arduino/tooling-project-assets/blob/main/workflow-templates/assets/npm-task/Taskfile.yml
   # Path of the project's primary npm-managed project:
-  DEFAULT_NPM_PROJECT_PATH: ./
+  DEFAULT_NPM_PROJECT_PATH: .
 
 tasks:
   check:
@@ -95,7 +95,7 @@ tasks:
     deps:
       - task: npm:install-deps
         vars:
-          PROJECT_PATH: ./
+          PROJECT_PATH: .
     cmds:
       - |
         wget \
@@ -390,7 +390,7 @@ tasks:
   config:sync:
     desc: Sync configuration files from templates
     vars:
-      REPOSITORY_ROOT_PATH: "./"
+      REPOSITORY_ROOT_PATH: "."
       WORKFLOW_TEMPLATE_ASSETS_PATH: "./workflow-templates/assets"
     cmds:
       - |
@@ -650,7 +650,7 @@ tasks:
     deps:
       - task: npm:install-deps
         vars:
-          PROJECT_PATH: ./
+          PROJECT_PATH: .
     cmds:
       - |
         npx \
@@ -782,7 +782,7 @@ tasks:
       - task: docs:generate
       - task: npm:install-deps
         vars:
-          PROJECT_PATH: ./
+          PROJECT_PATH: .
     cmds:
       - |
         npx \
@@ -795,7 +795,7 @@ tasks:
     deps:
       - task: npm:install-deps
         vars:
-          PROJECT_PATH: ./
+          PROJECT_PATH: .
     cmds:
       - |
         npx \
@@ -809,7 +809,7 @@ tasks:
     deps:
       - task: npm:install-deps
         vars:
-          PROJECT_PATH: ./
+          PROJECT_PATH: .
     cmds:
       - |
         npx \
